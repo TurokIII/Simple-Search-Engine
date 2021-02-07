@@ -1,15 +1,58 @@
 package search
 
 fun main() {
-    val words = readLine()!!.split(" ")
-    val needle = readLine()!!
+    getUserInput()
+}
 
-    for (i in words.indices) {
-        if (words[i] == needle) {
-            println(i + 1)
-            return
-        }
+fun getUserInput() {
+    println("Enter the number of songs:")
+    val numberOfSongs = readLine()!!.toInt()
+    val songs = mutableListOf<String>()
+
+    println("Enter all songs:")
+
+    repeat(numberOfSongs) {
+        songs.add(readLine()!!)
     }
 
-    println("Not Found.")
+    println()
+
+    println("Enter the number of search queries:")
+    val numberOfQueries = readLine()!!.toInt()
+
+    println()
+
+    repeat(numberOfQueries) {
+        println("Enter data to search for people:")
+        val data = readLine()!!
+        println()
+        findSong(data, songs)
+    }
+
+
+}
+
+fun findSong(songData: String, songs: MutableList<String>) {
+    val matches = mutableListOf<String>()
+
+    for (song in songs) {
+        if (song.toLowerCase().contains(songData.toLowerCase())) matches.add(song)
+    }
+
+    printSearchResults(matches)
+
+}
+
+fun printSearchResults(matches: MutableList<String>) {
+    println("Found songs:")
+
+    if (matches.size > 0) {
+        for (song in matches) {
+            println(song)
+        }
+    } else {
+        println("No matching songs found.")
+    }
+
+    println()
 }
