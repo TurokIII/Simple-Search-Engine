@@ -1,7 +1,13 @@
 package search
 
-fun main() {
-    val songs = addSongs()
+import java.io.File
+
+fun main(args: Array<String>) {
+    val fileName = args[1]
+    println(fileName)
+    val file = File(fileName)
+    val songs = file.readLines()
+
     getUserInput(songs)
 }
 
@@ -19,7 +25,7 @@ fun addSongs(): MutableList<String> {
     return songs
 }
 
-fun getUserInput(songs: MutableList<String>) {
+fun getUserInput(songs: List<String>) {
     while(true) {
         printMenu()
         val input = readLine()!!
@@ -34,14 +40,14 @@ fun getUserInput(songs: MutableList<String>) {
     }
 }
 
-fun searchForSong(songs: MutableList<String>) {
+fun searchForSong(songs: List<String>) {
     println()
     println("Enter a song name or artist to search all suitable songs.")
     val songData = readLine()!!
     findSong(songData, songs)
 }
 
-fun findSong(songData: String, songs: MutableList<String>) {
+fun findSong(songData: String, songs: List<String>) {
 
     val matches = mutableListOf<String>()
 
@@ -53,7 +59,7 @@ fun findSong(songData: String, songs: MutableList<String>) {
 
 }
 
-fun printSearchResults(matches: MutableList<String>) {
+fun printSearchResults(matches: List<String>) {
     println("Found songs:")
 
     if (matches.size > 0) {
@@ -67,7 +73,7 @@ fun printSearchResults(matches: MutableList<String>) {
     println()
 }
 
-fun printAllSongs(songs: MutableList<String>) {
+fun printAllSongs(songs: List<String>) {
     println("=== List of songs ===")
     for (song in songs) {
         println(song)
