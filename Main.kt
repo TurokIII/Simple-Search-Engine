@@ -7,31 +7,37 @@ fun main(args: Array<String>) {
     println(fileName)
     val file = File(fileName)
     val songs = file.readLines()
+    val wordIndexes = indexSongs(songs)
 
-    getUserInput(songs)
+    getUserInput(songs, wordIndexes)
 }
 
-fun addSongs(): MutableList<String> {
-    println("Enter the number of songs:")
-    val numberOfSongs = readLine()!!.toInt()
-    val songs = mutableListOf<String>()
+fun indexSongs(songs: List<String>): MutableMap<String, MutableSet<Int>> {
+    val wordIndexes = mutableMapOf<String, MutableSet<Int>>()
 
-    println("Enter all songs:")
-
-    repeat(numberOfSongs) {
-        songs.add(readLine()!!)
+    for (i in songs.indices) {
+        val line = songs[i].replace(",", " ")
+        val words = line.split(" ")
+        for (word in words) {
+            val wordUpper = word.toUpperCase()
+            if (wordIndexes.containsKey(wordUpper)) {
+                wordIndexes[wordUpper]?.add(i)
+            } else {
+                wordIndexes[wordUpper] = mutableSetOf(i)
+            }
+        }
     }
 
-    return songs
+    return wordIndexes
 }
 
-fun getUserInput(songs: List<String>) {
+fun getUserInput(songs: List<String>, wordIndexes: MutableMap<String, MutableSet<Int>>) {
     while(true) {
         printMenu()
         val input = readLine()!!
 
         when (input) {
-            "1" -> searchForSong(songs)
+            "1" -> searchForSong(songs, wordIndexes)
             "2" -> printAllSongs(songs)
             "0" -> break
             else -> println("\nIncorrect option! Try again")
@@ -40,19 +46,23 @@ fun getUserInput(songs: List<String>) {
     }
 }
 
-fun searchForSong(songs: List<String>) {
+fun searchForSong(songs: List<String>, wordIndexes: MutableMap<String, MutableSet<Int>>) {
     println()
     println("Enter a song name or artist to search all suitable songs.")
     val songData = readLine()!!
-    findSong(songData, songs)
+    findSong(songData, songs, wordIndexes)
 }
 
-fun findSong(songData: String, songs: List<String>) {
-
+fun findSong(songData: String, songs: List<String>, wordIndexes: MutableMap<String, MutableSet<Int>>) {
+    val songDataUpper = songData.toUpperCase()
     val matches = mutableListOf<String>()
 
-    for (song in songs) {
-        if (song.toLowerCase().contains(songData.toLowerCase())) matches.add(song)
+    if (wordIndexes.containsKey(songDataUpper)) {
+        for (n in wordIndexes[songDataUpper]!!) {
+            matches.add(songs[n])
+        }
+    } else {
+        matches.add("No matching songs found")
     }
 
     printSearchResults(matches)
@@ -62,7 +72,7 @@ fun findSong(songData: String, songs: List<String>) {
 fun printSearchResults(matches: List<String>) {
     println("Found songs:")
 
-    if (matches.size > 0) {
+    if (matches.isNotEmpty()) {
         for (song in matches) {
             println(song)
         }
