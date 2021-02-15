@@ -3,13 +3,18 @@ package search
 import java.io.File
 
 fun main(args: Array<String>) {
-    val fileName = args[1]
-    println(fileName)
-    val file = File(fileName)
-    val songs = file.readLines()
-    val wordIndexes = indexSongs(songs)
+    loadSongs(args[1])
+}
 
+fun loadSongs(fileName: String) {
+    val songs = readSongs(fileName)
+    val wordIndexes = indexSongs(songs)
     getUserInput(songs, wordIndexes)
+}
+
+fun readSongs(fileName: String): List<String> {
+    val file = File(fileName)
+    return file.readLines()
 }
 
 fun indexSongs(songs: List<String>): MutableMap<String, MutableSet<Int>> {
@@ -46,27 +51,98 @@ fun getUserInput(songs: List<String>, wordIndexes: MutableMap<String, MutableSet
     }
 }
 
+fun getQueryType(): String {
+    println()
+    println("Select a matching strategy: ALL, ANY, NONE")
+    return readLine()!!
+}
+
 fun searchForSong(songs: List<String>, wordIndexes: MutableMap<String, MutableSet<Int>>) {
+    val queryType = getQueryType()
     println()
     println("Enter a song name or artist to search all suitable songs.")
     val songData = readLine()!!
-    findSong(songData, songs, wordIndexes)
+    findSong(songData, songs, wordIndexes, queryType)
 }
 
-fun findSong(songData: String, songs: List<String>, wordIndexes: MutableMap<String, MutableSet<Int>>) {
-    val songDataUpper = songData.toUpperCase()
-    val matches = mutableListOf<String>()
+fun findSong(songData: String, songs: List<String>, wordIndexes: MutableMap<String, MutableSet<Int>>, queryType: String) {
+    val words = songData.toUpperCase().split(" ")
 
-    if (wordIndexes.containsKey(songDataUpper)) {
-        for (n in wordIndexes[songDataUpper]!!) {
-            matches.add(songs[n])
-        }
-    } else {
-        matches.add("No matching songs found")
+    val matches = when (queryType) {
+        "ALL" -> findAllWords(words, songs, wordIndexes)
+        "ANY" -> findAnyWords(words, songs, wordIndexes)
+        "NONE" -> findNoneWords(words, songs, wordIndexes)
+        else -> mutableListOf()
     }
+
+    if (matches.isEmpty()) matches.add("No matching songs found")
 
     printSearchResults(matches)
 
+}
+
+fun findAllWords(
+    words: List<String>,
+    songs: List<String>,
+    wordIndexes: MutableMap<String,MutableSet<Int>>
+): MutableList<String> {
+    val matches = mutableListOf<String>()
+    val lineMatchCount = mutableMapOf<Int, Int>()
+
+    for (word in words) {
+        if (wordIndexes.containsKey(word)) {
+            for (n in wordIndexes[word]!!) {
+                lineMatchCount[n] = lineMatchCount.getOrDefault(n, 0) + 1
+            }
+        }
+    }
+
+    for ((lineNum, matchCount) in lineMatchCount) {
+        if (matchCount == words.size) matches.add(songs[lineNum])
+    }
+
+    return matches
+}
+
+fun findAnyWords(
+    words: List<String>,
+    songs: List<String>,
+    wordIndexes: MutableMap<String, MutableSet<Int>>
+): MutableList<String> {
+    val matches = mutableListOf<String>()
+
+    for (word in words) {
+        if (wordIndexes.containsKey(word)) {
+            for (n in wordIndexes[word]!!) {
+                matches.add(songs[n])
+            }
+        }
+    }
+
+    return matches
+}
+
+fun findNoneWords(
+    words: List<String>,
+    songs: List<String>,
+    wordIndexes: MutableMap<String, MutableSet<Int>>
+): MutableList<String> {
+    val matches = mutableListOf<String>()
+    val linesWithWord = mutableListOf<Int>()
+
+    for (word in words) {
+        if (wordIndexes.containsKey(word)) {
+            for (n in wordIndexes[word]!!) {
+                linesWithWord += wordIndexes[word]!!.map { it.toInt() }
+            }
+        }
+    }
+
+    for (i in songs.indices) {
+        if (i !in linesWithWord) matches.add(songs[i])
+    }
+
+    return matches
 }
 
 fun printSearchResults(matches: List<String>) {
